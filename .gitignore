@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+
+# Docker
+*.tar
+
+# Kubernetes secrets
+*secret*.yaml
+*Secret*.yaml
+
+# OS
+.DS_Store
+*.log
