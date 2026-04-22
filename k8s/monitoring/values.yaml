@@ -1,0 +1,27 @@
+prometheus:
+  prometheusSpec:
+    scrapeInterval: 15s
+    additionalScrapeConfigs:
+      - job_name: 'ollama-fastapi'
+        static_configs:
+          - targets: ['fastapi-service.mlops.svc.cluster.local:8000']
+        metrics_path: '/metrics'
+        scrape_interval: 15s
+
+grafana:
+  enabled: true
+  adminPassword: "mlops-admin"
+  service:
+    type: ClusterIP
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: default
+          folder: MLOps
+          type: file
+          options:
+            path: /var/lib/grafana/dashboards/default
+
+alertmanager:
+  enabled: false

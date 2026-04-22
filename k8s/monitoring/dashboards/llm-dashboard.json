@@ -1,0 +1,32 @@
+{
+  "title": "LLM MLOps Dashboard",
+  "panels": [
+    {
+      "title": "Total LLM Requests",
+      "type": "stat",
+      "gridPos": {"x":0,"y":0,"w":6,"h":4},
+      "targets": [{"expr": "sum(llm_requests_total)", "legendFormat": "Total"}]
+    },
+    {
+      "title": "Success vs Error",
+      "type": "piechart",
+      "gridPos": {"x":6,"y":0,"w":6,"h":4},
+      "targets": [{"expr": "sum by(status) (llm_requests_total)", "legendFormat": "{{status}}"}]
+    },
+    {
+      "title": "Avg Response Time (seconds)",
+      "type": "gauge",
+      "gridPos": {"x":12,"y":0,"w":6,"h":4},
+      "targets": [{"expr": "rate(llm_request_duration_seconds_sum[5m]) / rate(llm_request_duration_seconds_count[5m])", "legendFormat": "Avg duration"}]
+    },
+    {
+      "title": "Request Rate (per min)",
+      "type": "timeseries",
+      "gridPos": {"x":0,"y":4,"w":24,"h":8},
+      "targets": [{"expr": "rate(llm_requests_total[1m]) * 60", "legendFormat": "req/min {{status}}"}]
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s"
+}
