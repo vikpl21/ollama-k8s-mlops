@@ -140,6 +140,40 @@ graph LR
 ```
 
 
+## GCP Cloud Run Deployment
+
+Live demo: https://fastapi-mlops-798191602372.europe-central2.run.app
+
+| Endpoint | URL |
+|----------|-----|
+| Root | /  |
+| Health | /health |
+| Generate | /generate |
+| Swagger UI | /docs |
+
+
+### Deploy to Cloud Run
+
+```bash
+# Build and push to Artifact Registry
+gcloud auth configure-docker europe-central2-docker.pkg.dev
+
+docker build -t europe-central2-docker.pkg.dev/ollama-mlops/mlops-repo/fastapi-cloudrun:v1.0 ./cloudrun/
+
+docker push europe-central2-docker.pkg.dev/ollama-mlops/mlops-repo/fastapi-cloudrun:v1.0
+
+# Deploy
+gcloud run deploy fastapi-mlops \
+  --image europe-central2-docker.pkg.dev/ollama-mlops/mlops-repo/fastapi-cloudrun:v1.0 \
+  --platform managed \
+  --region europe-central2 \
+  --allow-unauthenticated \
+  --port 8080 \
+  --memory 512Mi
+```
+
+
 ## Author
 
 [vikpl21@gmail.com](mailto:vikpl21@gmail.com) — [GitHub](https://github.com/vikpl21)
+
