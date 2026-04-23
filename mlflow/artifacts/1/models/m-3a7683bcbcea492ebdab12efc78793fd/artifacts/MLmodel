@@ -1,0 +1,23 @@
+artifact_path: /home/vikpl/ollama-k8s-mlops/mlflow/artifacts/1/models/m-3a7683bcbcea492ebdab12efc78793fd/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.3
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.8.0
+    skops_trusted_types: null
+mlflow_version: 3.11.1
+model_id: m-3a7683bcbcea492ebdab12efc78793fd
+model_size_bytes: 962
+model_uuid: m-3a7683bcbcea492ebdab12efc78793fd
+prompts: null
+run_id: a4798a4ab0d54ae8afc210695845d01f
+utc_time_created: '2026-04-23 17:31:20.241435'
