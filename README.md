@@ -104,6 +104,7 @@ helm install monitoring \
 kubectl apply -f k8s/monitoring/servicemonitor.yaml
 ```
 
+```text
 ## Project Structure
 ollama-k8s-mlops/
 ├── app/
@@ -127,6 +128,8 @@ ollama-k8s-mlops/
 └── .github/
 └── workflows/
 └── ci.yaml          # CI: lint, test, build, validate
+```
+
 ## CI/CD Pipeline
 
 ```mermaid
@@ -136,16 +139,7 @@ graph LR
     Push --> V[validate-k8s<br/>kubeconform]
 ```
 
-## Skills Demonstrated
-
-- **Kubernetes** — Deployments, Services, Ingress, PVC, health probes, Helm
-- **MLOps** — Local LLM deployment and inference pipeline
-- **Python** — FastAPI, async HTTP, Prometheus instrumentation
-- **Docker** — Non-root user, health checks, image optimization
-- **Monitoring** — Prometheus ServiceMonitor, Grafana dashboards
-- **CI/CD** — GitHub Actions: lint, test, Docker build, manifest validation
-- **Linux** — k3s on WSL2/Ubuntu, networking, storage
 
 ## Author
 
-Viktor Koliechkin — [vikpl21@gmail.com](mailto:vikpl21@gmail.com) — [GitHub](https://github.com/vikpl21)
+[vikpl21@gmail.com](mailto:vikpl21@gmail.com) — [GitHub](https://github.com/vikpl21)
