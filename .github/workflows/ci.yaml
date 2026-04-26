@@ -20,7 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r app/requirements.txt
+          pip install -r app/requirements.txt mlflow scikit-learn
           pip install ruff pytest httpx
 
       - name: Lint with ruff

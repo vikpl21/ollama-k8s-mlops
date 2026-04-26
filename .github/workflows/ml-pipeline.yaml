@@ -4,43 +4,38 @@ on:
   push:
     paths:
       - 'mlflow/experiments/**'
-      - '.github/workflows/ml-pipeline.yaml'
   workflow_dispatch:
 
 jobs:
   train-and-register:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install dependencies
         run: |
-          pip install mlflow==3.11.1 \
-            scikit-learn pandas numpy \
-            google-cloud-storage \
-            google-auth
+          pip install mlflow==3.11.1 scikit-learn pandas numpy \
+            google-cloud-storage google-auth requests
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Get MLflow token and run pipeline
+      - name: Run ML pipeline
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
-          # Отримай токен через service account
-          export MLFLOW_TRACKING_TOKEN=$(gcloud auth print-identity-token \
-            --audiences="${{ secrets.MLFLOW_TRACKING_URI }}")
+          # Cloud Run потребує токен без --audiences
+          TOKEN=$(gcloud auth print-identity-token)
+          export MLFLOW_TRACKING_TOKEN=$TOKEN
           
           echo "MLflow URI: $MLFLOW_TRACKING_URI"
-          echo "Token obtained: ${MLFLOW_TRACKING_TOKEN:0:20}..."
+          echo "Token prefix: ${TOKEN:0:30}..."
           
           python3 mlflow/experiments/train_classifier.py
 
@@ -48,8 +43,8 @@ jobs:
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
-          export MLFLOW_TRACKING_TOKEN=$(gcloud auth print-identity-token \
-            --audiences="${{ secrets.MLFLOW_TRACKING_URI }}")
+          TOKEN=$(gcloud auth print-identity-token)
+          export MLFLOW_TRACKING_TOKEN=$TOKEN
           
           python3 -c "
           import mlflow, os
@@ -62,5 +57,5 @@ jobs:
           )
           for r in runs:
             print(f'Run: {r.info.run_name} | F1: {r.data.metrics.get(\"f1_score\",0):.4f}')
-          print('Pipeline verified!')
+          print('Pipeline verified successfully!')
           "
