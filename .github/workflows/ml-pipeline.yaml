@@ -6,16 +6,10 @@ on:
       - 'mlflow/experiments/**'
       - '.github/workflows/ml-pipeline.yaml'
   workflow_dispatch:
-    inputs:
-      reason:
-        description: 'Reason for manual run'
-        required: false
-        default: 'manual trigger'
 
 jobs:
   train-and-register:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,47 +23,44 @@ jobs:
         run: |
           pip install mlflow==3.11.1 \
             scikit-learn pandas numpy \
-            google-auth google-auth-httplib2
+            google-cloud-storage \
+            google-auth
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Run ML training pipeline
+      - name: Get MLflow token and run pipeline
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
-          # Отримай токен для MLflow
-          export MLFLOW_TRACKING_TOKEN=$(gcloud auth print-identity-token)
+          # Отримай токен через service account
+          export MLFLOW_TRACKING_TOKEN=$(gcloud auth print-identity-token \
+            --audiences="${{ secrets.MLFLOW_TRACKING_URI }}")
           
-          echo "Starting ML pipeline..."
           echo "MLflow URI: $MLFLOW_TRACKING_URI"
+          echo "Token obtained: ${MLFLOW_TRACKING_TOKEN:0:20}..."
           
           python3 mlflow/experiments/train_classifier.py
 
-      - name: Verify results in MLflow
+      - name: Verify results
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
-          export MLFLOW_TRACKING_TOKEN=$(gcloud auth print-identity-token)
+          export MLFLOW_TRACKING_TOKEN=$(gcloud auth print-identity-token \
+            --audiences="${{ secrets.MLFLOW_TRACKING_URI }}")
           
           python3 -c "
           import mlflow, os
           mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI'])
           client = mlflow.MlflowClient()
-          experiments = client.search_experiments()
-          print(f'Total experiments: {len(experiments)}')
-          
           runs = client.search_runs(
-            experiment_ids=[e.experiment_id for e in experiments],
+            experiment_ids=['1'],
             order_by=['metrics.f1_score DESC'],
-            max_results=1
+            max_results=3
           )
-          if runs:
-            best = runs[0]
-            print(f'Best run: {best.info.run_name}')
-            print(f'F1 score: {best.data.metrics.get(\"f1_score\", 0):.4f}')
-            print(f'Accuracy: {best.data.metrics.get(\"accuracy\", 0):.4f}')
-          print('Pipeline completed successfully!')
+          for r in runs:
+            print(f'Run: {r.info.run_name} | F1: {r.data.metrics.get(\"f1_score\",0):.4f}')
+          print('Pipeline verified!')
           "

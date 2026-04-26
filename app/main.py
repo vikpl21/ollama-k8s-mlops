@@ -5,6 +5,7 @@ import httpx
 import time
 import logging
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from model_serving import get_classifier
 from fastapi.responses import Response
 
 # Logging
@@ -110,7 +111,6 @@ async def root():
 
 
 # ===== Model Serving =====
-from model_serving import get_classifier
 
 class PredictRequest(BaseModel):
     features: list
