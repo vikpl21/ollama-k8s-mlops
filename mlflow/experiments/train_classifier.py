@@ -1,3 +1,4 @@
+import os
 """
 Material Classification Experiment with MLflow Tracking
 """
@@ -14,7 +15,7 @@ from sklearn.preprocessing import StandardScaler
 import warnings
 warnings.filterwarnings('ignore')
 
-mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000"))
 mlflow.set_experiment("material-classification")
 
 np.random.seed(42)

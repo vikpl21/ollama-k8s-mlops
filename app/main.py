@@ -107,3 +107,46 @@ async def root():
         "health": "/health",
         "generate": "/generate"
     }
+
+
+# ===== Model Serving =====
+from model_serving import get_classifier
+
+class PredictRequest(BaseModel):
+    features: list
+    # features = [texture, reflectivity, weight, hardness, conductivity]
+    # Кожне значення від 0.0 до 1.0
+
+@app.post("/predict")
+async def predict_material(request: PredictRequest):
+    """
+    Classify material from physical properties.
+    Features: [texture, reflectivity, weight, hardness, conductivity]
+    Each value: 0.0 to 1.0
+    """
+    if len(request.features) != 5:
+        raise HTTPException(
+            status_code=400,
+            detail="Expected 5 features: [texture, reflectivity, weight, hardness, conductivity]"
+        )
+    
+    classifier = get_classifier()
+    result = classifier.predict(request.features)
+    
+    if "error" in result:
+        raise HTTPException(status_code=503, detail=result["error"])
+    
+    return result
+
+@app.get("/predict/classes")
+async def get_classes():
+    return {
+        "classes": ["metal", "plastic", "wood", "glass", "fabric"],
+        "features": ["texture", "reflectivity", "weight", "hardness", "conductivity"],
+        "feature_range": "0.0 to 1.0",
+        "example": {
+            "metal": [0.1, 0.9, 0.8, 0.9, 0.95],
+            "plastic": [0.5, 0.4, 0.2, 0.3, 0.05],
+            "wood": [0.8, 0.2, 0.4, 0.5, 0.1],
+        }
+    }
