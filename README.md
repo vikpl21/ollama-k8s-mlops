@@ -13,15 +13,15 @@ A production-style MLOps platform: LLM (Ollama/phi3:mini) on Kubernetes (k3s), F
 
 ```mermaid
 graph TD
-    Client([Client]) -->|HTTP| CR[FastAPI\nGCP Cloud Run]
-    CR -->|/generate| OL[Ollama pod\nphi3:mini\nk3s]
-    CR -->|/predict| MR[MLflow\nModel Registry]
-    CR -->|metrics| PR[Prometheus\nk3s]
-    PR --> GR[Grafana\nk3s]
+    Client([Client]) -->|HTTP| CR["FastAPI<br/>GCP Cloud Run"]
+    CR -->|/generate| OL["Ollama pod<br/>phi3:mini<br/>k3s"]
+    CR -->|/predict| MR["MLflow<br/>Model Registry"]
+    CR -->|metrics| PR["Prometheus<br/>k3s"]
+    PR --> GR["Grafana<br/>k3s"]
 
-    GHA[GitHub Actions\nCI + ML Pipeline] -->|train + log| ML[MLflow Server\nGCP Cloud Run]
-    ML -->|metadata| PG[(Cloud SQL\nPostgreSQL)]
-    ML -->|artifacts| GCS[(GCS Bucket\nModels)]
+    GHA["GitHub Actions<br/>CI + ML Pipeline"] -->|train + log| ML["MLflow Server<br/>GCP Cloud Run"]
+    ML -->|metadata| PG[("Cloud SQL<br/>PostgreSQL")]
+    ML -->|artifacts| GCS[("GCS Bucket<br/>Models")]
 
     subgraph k3s cluster
         OL
@@ -36,6 +36,34 @@ graph TD
         GCS
     end
 ```
+
+---
+
+## Monitoring Dashboards
+
+### LLM MLOps Dashboard
+Real-time LLM request metrics: total requests, success rate, average response time, and request rate per minute.
+
+![LLM MLOps Dashboard](docs/llm-dashboard.png)
+
+| Metric | Value | Description |
+|--------|-------|-------------|
+| Total LLM Requests | 16 | Monotonic counter of all requests |
+| Success vs Error | 100% success | All requests completed successfully |
+| Avg Response Time | 73.7s | phi3:mini inference latency |
+| Request Rate | ~1-2 req/min | Real-time throughput |
+
+### Kubernetes / Compute Resources / Namespace (Pods)
+Pod-level CPU and memory utilization showing real LLM inference load in namespace `mlops`.
+
+![Kubernetes Resources Dashboard](docs/kubernetes-resources.png)
+
+| Pod | CPU Usage | Memory Usage | Notes |
+|-----|-----------|--------------|-------|
+| ollama | 3.63 cores | 3.59 GiB | LLM model loaded in RAM |
+| fastapi-app | 0.009 cores | 54.5 MiB | Lightweight API wrapper |
+
+> **CPU Utilization 606%** from requests — Ollama spikes to 3.6 cores during token generation, confirming the CPU-intensive nature of LLM inference. Memory stays stable as the model remains loaded between requests.
 
 ---
 
@@ -120,7 +148,10 @@ docker save ollama-fastapi:v1.0 | sudo k3s ctr images import -
 # 5. Deploy FastAPI
 kubectl apply -f k8s/fastapi/
 
-# 6. Test
+# 6. Test via Ingress
+curl -H "Host: mlops.local" http://172.28.198.18/health
+
+# Or via port-forward
 kubectl port-forward svc/fastapi-service 8000:8000 -n mlops
 curl http://localhost:8000/health
 ```
@@ -139,6 +170,13 @@ helm install monitoring \
   --set nodeExporter.enabled=false
 
 kubectl apply -f k8s/monitoring/servicemonitor.yaml
+```
+
+### Access Grafana
+
+```bash
+kubectl port-forward svc/monitoring-grafana 3000:80 -n monitoring
+# Open http://localhost:3000  login: admin  password: mlops-admin
 ```
 
 ---
@@ -221,12 +259,12 @@ python3 mlflow/experiments/train_classifier.py
 
 ```mermaid
 graph LR
-    Push([git push]) --> L[lint-and-test\nruff + pytest]
-    L -->|pass| D[docker-build\nbuild image]
-    Push --> V[validate-k8s\nkubeconform]
+    Push([git push]) --> L["lint-and-test<br/>ruff + pytest"]
+    L -->|pass| D["docker-build<br/>build image"]
+    Push --> V["validate-k8s<br/>kubeconform"]
 
-    Push2([push mlflow/]) --> ML[ML Training Pipeline\nGCP auth + train + log]
-    ML --> MR[MLflow Registry\nbest model saved to GCS]
+    Push2([push mlflow/]) --> ML["ML Training Pipeline<br/>GCP auth + train + log"]
+    ML --> MR["MLflow Registry<br/>best model saved to GCS"]
 ```
 
 ### GitHub Actions secrets required
@@ -271,6 +309,10 @@ ollama-k8s-mlops/
 │   └── monitoring/
 │       ├── values.yaml
 │       └── servicemonitor.yaml
+├── docs/
+│   └── screenshots/
+│       ├── llm-dashboard.png         # LLM MLOps Grafana dashboard
+│       └── kubernetes-resources.png  # K8s Compute Resources dashboard
 └── .github/
     └── workflows/
         ├── ci.yaml           # CI: lint, test, docker build, k8s validate
