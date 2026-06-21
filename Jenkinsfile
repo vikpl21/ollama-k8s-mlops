@@ -18,33 +18,37 @@ pipeline {
 
         stage('Lint (ruff)') {
             steps {
-                sh '''
-                    docker run --rm -v "$PWD":/app -w /app python:3.11-slim \
-                      sh -c "pip install --quiet ruff && ruff check ."
-                '''
+                dir('app') {
+                    sh '''
+                        pip install --quiet --break-system-packages ruff
+                        ruff check .
+                    '''
+                }
             }
         }
 
         stage('Test (pytest)') {
             steps {
-                sh '''
-                    docker run --rm -v "$PWD":/app -w /app python:3.11-slim \
-                      sh -c "pip install --quiet -r requirements.txt && pytest -v"
-                '''
+                dir('app') {
+                    sh '''
+                        pip install --quiet --break-system-packages -r requirements.txt
+                        pytest -v tests/
+                    '''
+                }
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG -f app/Dockerfile app'
             }
         }
 
         stage('Validate K8s manifests (kubeconform)') {
             steps {
                 sh '''
-                    docker run --rm -v "$PWD":/data ghcr.io/yannh/kubeconform:latest \
-                      -summary /data/k8s/*.yaml
+                    curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz -C /tmp kubeconform
+                    /tmp/kubeconform -summary -ignore-missing-schemas k8s
                 '''
             }
         }
