@@ -20,8 +20,8 @@ pipeline {
             steps {
                 dir('app') {
                     sh '''
-                        pip install --quiet --break-system-packages ruff
-                        ruff check .
+                        python3 -m pip install --user --break-system-packages --quiet ruff
+                        python3 -m ruff check .
                     '''
                 }
             }
@@ -31,8 +31,9 @@ pipeline {
             steps {
                 dir('app') {
                     sh '''
-                        pip install --quiet --break-system-packages -r requirements.txt
-                        pytest -v tests/
+                        python3 -m pip install --user --break-system-packages --quiet -r requirements.txt
+                        python3 -m pip install --user --break-system-packages --quiet pytest
+                        python3 -m pytest -v tests/
                     '''
                 }
             }
