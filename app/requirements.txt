@@ -3,3 +3,6 @@ uvicorn==0.30.6
 httpx==0.27.2
 pydantic==2.8.2
 prometheus-client==0.21.0
+mlflow
+numpy
+scikit-learn
