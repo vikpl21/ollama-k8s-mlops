@@ -49,7 +49,9 @@ pipeline {
             steps {
                 sh '''
                     curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz -C /tmp kubeconform
-                    /tmp/kubeconform -summary -ignore-missing-schemas k8s
+                    /tmp/kubeconform -summary -ignore-missing-schemas \
+                      -ignore-filename-pattern '(values\\.yaml|dashboards/.*\\.json)$' \
+                      k8s
                 '''
             }
         }
